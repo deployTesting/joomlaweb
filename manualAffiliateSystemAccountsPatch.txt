@@ -1,0 +1,86 @@
+app/models/AffiliateSystemAccounts.php ->
+
+
+    /*
+    * Created by Ruben Arias
+    * date: 15/3/16
+    *
+    * Get password decrypted in AffiliateSystemAccounts
+    *
+    * @parame value to decrypt
+    *
+    */
+     public function getPasswordAttribute($value)
+     {
+         return (dbPassDecrypt($value));
+     }
+
+
+    /*
+	 * Created by Ruben Arias
+	 * date: 15/3/16
+	 *
+	 * Set password encrypted in AffiliateSystemAccounts
+	 *
+	 * @param value to encrypt
+	 *
+	 */
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] =dbPassEncrypt($value);
+    }
+
+
+app/config/auth.php ->
+
+	/*
+	 * Created by Ruben Arias
+	 * date: 15/3/16
+	 *
+	 * Salt password to encrypt and decrypt AffiliateSystemAccounts password
+	 * Fixed parameter
+	 * @
+	 *
+	 */
+	'saltPwd'=>['key'=>'Te%445j66ll;ertre4543HFtth='],
+
+
+helpers.php ->
+
+  /**
+     * function dbPassEncrypt
+     *
+     * This function is for Encrypt strings with fixed salt key.
+     *
+     *
+     * @author  Ruben Arias
+     * @date    15/03/16
+     * @param $pwd - string with the text to enctypt
+     * @return $pwd encrypted
+     */
+    function dbPassEncrypt($pwd){
+
+        $fixedKey=Config::get('auth.saltPwd.key');  // One fixed salt key - the same to encrypt and decrypt
+        $encrypt = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, md5($fixedKey), $pwd, MCRYPT_MODE_CBC, md5(md5($fixedKey))));
+        return $encrypt; //return encrypted string
+
+    }
+    /**
+     * function dbPassDecrypt
+     *
+     * This function is for Decrypt strings with fixed salt key.
+     *
+     *
+     * @author  Ruben Arias
+     * @date    15/03/16
+     * @param $pwd - string with the text to Decrypt
+     * @return $pwd Decrypted
+     */
+    function dbPassDecrypt($pwd){
+
+        $fixedKey=Config::get('auth.saltPwd.key');  // One fixed salt key - the same to encrypt and decrypt
+        $decrypted = rtrim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, md5($fixedKey), base64_decode($pwd), MCRYPT_MODE_CBC, md5(md5($fixedKey))), "\0");
+
+        return $decrypted;  //return encrypted string
+
+    }
